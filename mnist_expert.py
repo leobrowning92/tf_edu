@@ -42,6 +42,7 @@ W_conv1 = weight_variable([5, 5, 1, 32])
 b_conv1 = bias_variable([32])
 #reshape the image to a 4d tensor with 2nd and 3rd dimension
 #of height and witdth and 4th number of color channels
+# -1 denotes an inferred dimension based on the input data
 x_image=tf.reshape(x,[-1,28,28,1])
 # apply the convolution to the x_image (convolve x_image and weights)
 # apply the ReLU function and mac pool
