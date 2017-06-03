@@ -19,7 +19,7 @@ def imageto_tensor(array):
     return tf.convert_to_tensor(array)
 
 class Dataset(object):
-    def __init__(self,savedir):
+    def __init__(self,savedir,size):
         self.fnames=glob.glob(savedir+"*.png")
         self.number=len(self.fnames)
         self.fnames.sort()
@@ -27,7 +27,8 @@ class Dataset(object):
         self.info=np.genfromtxt(os.path.join(self.savedir,"info.txt"), delimiter=',')
         self.truths=np.not_equal(self.info,0)
         self.images=self.load_images()
-        self.images=np.reshape(self.images,(self.number,1024,4))
+        self.size=size
+        self.images=np.reshape(self.images,(self.number,size**2,4))
         self._epochs_completed=0
         self._shuffled_images=self.images
         np.random.shuffle(self._shuffled_images)
