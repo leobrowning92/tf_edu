@@ -16,8 +16,8 @@ def line(ctx,start,end,width=1,v=False):
     ctx.line_to(end[0],end[1])
     ctx.stroke()
 
-def randxy(size):
-    return [np.random.uniform(0,size),np.random.uniform(0,size)]
+def randxy(size,sigma):
+    return [np.random.normal(size/2,sigma),np.random.normal(size/2,sigma)]
 def intersect(s1,s2):
     #assert that x intervals overlap
     if max(s1[:,0])<min(s2[:,0]):
@@ -38,29 +38,31 @@ def intersect(s1,s2):
     else:
         return False
 
-def make_test_image(fname,savedir,size):
+def make_test_image(fname,savedir,size,overshoot):
     sur=cairo.ImageSurface(cairo.FORMAT_ARGB32,size,size)
     ctx=cairo.Context(sur)
     ctx.set_source_rgb(1,0,0)
-    s1=np.array([randxy(size),randxy(size)])
-    s2=np.array([randxy(size),randxy(size)])
+    s1=np.array([randxy(size,overshoot),randxy(size,overshoot)])
+    s2=np.array([randxy(size,overshoot),randxy(size,overshoot)])
     p1=intersect(s1,s2)
     line(ctx,s1[0],s1[1])
     line(ctx,s2[0],s2[1])
+    sur.write_to_png(os.path.join(savedir,fname))
     if p1==False:
-        pass
+        return [False,False]
     else:
         ctx.set_source_rgb(0,1,0)
         ctx.rectangle(p1[0],p1[1],1,1)
         ctx.fill()
-    sur.write_to_png(os.path.join(savedir,fname))
+
     return p1
 
 def make_image_set(number,savedir):
-    with open(savedir+"info.txt","w+") as f:
-        for i in range(number):
-            f.write("{0:06d}".format(i) + "," + str(make_test_image("{0:06d}".format(i) + ".png", "line_data/training", 32))+"\n")
-            make_test_image("{0:06d}.png".format(i), savedir, 32 )
+    info=np.empty((number,2))
+    for i in range(number):
+        info[i]=make_test_image("{0:06d}.png".format(i) , savedir, 32,20)
+    print(info)
+    np.savetxt(os.path.join(savedir,"info.txt"), info,delimiter=',')
 
 if __name__=="__main__":
     assert len(sys.argv)==3, "image-gen takes exactly 2 arguments, {} given.".format(len(sys.argv)-1)
