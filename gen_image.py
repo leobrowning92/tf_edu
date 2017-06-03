@@ -47,21 +47,19 @@ def make_test_image(fname,savedir,size,overshoot):
     p1=intersect(s1,s2)
     line(ctx,s1[0],s1[1])
     line(ctx,s2[0],s2[1])
-    sur.write_to_png(os.path.join(savedir,fname))
     if p1==False:
-        return [False,False]
+        p1=[False,False]
     else:
         ctx.set_source_rgb(0,1,0)
         ctx.rectangle(p1[0],p1[1],1,1)
         ctx.fill()
-
+    sur.write_to_png(os.path.join(savedir,fname))
     return p1
 
 def make_image_set(number,savedir):
     info=np.empty((number,2))
     for i in range(number):
         info[i]=make_test_image("{0:06d}.png".format(i) , savedir, 32,20)
-    print(info)
     np.savetxt(os.path.join(savedir,"info.txt"), info,delimiter=',')
 
 if __name__=="__main__":

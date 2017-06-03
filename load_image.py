@@ -27,6 +27,10 @@ class Dataset(object):
         self.info=np.genfromtxt(os.path.join(self.savedir,"info.txt"), delimiter=',')
         self.truths=np.not_equal(self.info,0)
         self.images=self.load_images()
+        self.images=np.reshape(self.images,(self.number,1024,4))
+        self._epochs_completed=0
+        self._shuffled_images=self.images
+        np.random.shuffle(self._shuffled_images)
 
     def load_images(self):
         images=[]
@@ -35,8 +39,21 @@ class Dataset(object):
         images=np.stack(images,axis=0)
         return images
     def get_data(self):
-        images=np.reshape(self.images,(self.number,1024,4))
-        return images[:,:,0],images[:,:,1]
+        return self.images[:,:,0],self.images[:,:,1]
+    def next_batch(self,batch_size):
+        start=self._epochs_completed*batch_size
+        stop=(self._epochs_completed+1)*batch_size
+        if stop>=self.number:
+            self._shuffled_images=self.images
+            np.random.shuffle(self._shuffled_images)
+            self._epochs_completed=1
+            return self.images[start:stop,:,0],self.images[start:stop,:,1]
+        if stop<self.number:
+            self._epochs_completed+=1
+            return self.images[start:stop,:,0],self.images[start:stop,:,1]
+
+
+
 
 if __name__=="__main__":
     assert len(sys.argv)==2, "image-gen takes exactly 1 arguments, {} given.".format(len(sys.argv)-1)
