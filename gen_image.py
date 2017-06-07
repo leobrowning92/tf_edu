@@ -73,7 +73,7 @@ def make_image_set(number,savedir,size):
 if __name__=="__main__":
 
     make_image_set(100,"line_data/evaluation/",16)
-    make_image_set(1000,"line_data/training/",16)
+    make_image_set(10000,"line_data/training/",16)
 
 
 

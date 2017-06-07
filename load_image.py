@@ -2,6 +2,7 @@ from PIL import Image
 import numpy as np
 import tensorflow as tf
 import glob,os,sys
+import matplotlib.pyplot as plt
 
 
 
@@ -14,7 +15,7 @@ def imageto_array(image_path,v=False):
         print(im.size,im.format,im.mode)
         print(arrayim.shape)
     im.close()
-    return arrayim
+    return arrayim/255
 def imageto_tensor(array):
     return tf.convert_to_tensor(array)
 
