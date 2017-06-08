@@ -16,6 +16,11 @@ def line(ctx,start,end,width=1,v=False):
     ctx.line_to(end[0],end[1])
     ctx.stroke()
 
+def checkdir(directoryname):
+    if os.path.isdir(directoryname) == False:
+        os.system("mkdir " + directoryname)
+    pass
+
 def randxy(size,sigma):
     return [np.random.normal(size/2,sigma),np.random.normal(size/2,sigma)]
 def intersect(s1,s2,size):
@@ -65,14 +70,15 @@ def make_test_image(fname,savedir,size,overshoot,assert_intersect=False):
     return p1
 
 def make_image_set(number,savedir,size):
+    checkdir(savedir)
     info=np.empty((number,2))
     for i in range(number):
         info[i]=make_test_image("{0:06d}.png".format(i) , savedir, size,size*0.6,assert_intersect=True)
     np.savetxt(os.path.join(savedir,"info.txt"), info,delimiter=',')
 
 if __name__=="__main__":
-
-    make_image_set(100,"line_data/evaluation/",16)
+    checkdir("line_data")
+    make_image_set(1000,"line_data/evaluation/",16)
     make_image_set(10000,"line_data/training/",16)
 
 
