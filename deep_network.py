@@ -24,7 +24,7 @@ def random_check(dataset,axes):
     num=int(np.random.uniform(0,len(dataset)))
     for i in range(3):
         if i==2:
-            axes[i].imshow(np.reshape(y.eval(feed_dict = {x:dataset[:,:,0]})[num],(16,16)))
+            axes[i].imshow(np.reshape(y_conv.eval(feed_dict = {x:dataset[:,:,0]})[num],(16,16)))
         else:
             axes[i].imshow(np.reshape(dataset[num,:,i],(16,16)))
 
@@ -48,12 +48,7 @@ evaluation=load_image.Dataset("line_data/evaluation/",size)
 x= tf.placeholder(tf.float32, [None,size**2]) #note None allows any length
 y_=tf.placeholder(tf.float32,[None,size**2])
 
-W= weight_variable([size**2,size**2])
-b=bias_variable([size**2])
 
-#implement model
-y=tf.nn.softmax(tf.matmul(x,W)+b)#this implements our Model
-#placeholder for correct values
 
 # encodes a feature window of 5x5 from one
 # input channel (image) to 32 output channels (32 features)
@@ -73,7 +68,7 @@ W_fc1 = weight_variable([int(size/2 * size/2 * nfeatures), size**2])
 b_fc1 = bias_variable([size**2])
 
 #reshape tensor from pooling layers into batch of vectors.
-h_pool1_flat = tf.reshape(h_pool1, [-1, int(size/2*size/2*size**2)])
+h_pool1_flat = tf.reshape(h_pool1, [-1, int(size/2*size/2*nfeatures)])
 #vectors times weights +biases applying relu function
 h_fc1 = tf.nn.relu(tf.matmul(h_pool1_flat, W_fc1) + b_fc1)
 
@@ -90,16 +85,14 @@ y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
 
 #cross entropy function
 cross_entropy=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
-reg=tf.nn.l2_loss(W)
-loss=tf.reduce_mean(cross_entropy+0.01*reg)
-train_step=tf.train.GradientDescentOptimizer(1e1).minimize(loss)
+train_step=tf.train.GradientDescentOptimizer(1e1).minimize(cross_entropy)
 
 
 # returns a list of booleans
-correct_prediction=tf.equal(tf.argmax(y,1),tf.argmax(y_,1))
+correct_prediction=tf.equal(tf.argmax(y_conv,1),tf.argmax(y_,1))
 #returns the average of the booleans cast to floats. ie 1=True,0=False
 accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
-rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y,y_)))
+rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y_conv,y_)))
 tf.global_variables_initializer().run()
 for i in range(20):
     batch_xs,batch_ys = training.next_batch(100)
@@ -109,5 +102,5 @@ for i in range(20):
         print(i,"training accuracy {}".format(rms.eval(feed_dict = {x:batch_xs,y_:batch_ys})))
 
 visual_check(evaluation.images)
-plt.imshow(np.reshape(W.eval(),(256,256)))
-plt.show()
+# plt.imshow(np.reshape(W.eval(),(256,256)))
+# plt.show()
