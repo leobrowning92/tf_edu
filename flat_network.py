@@ -16,6 +16,22 @@ def bias_variable(shape):
     slight positive bias to prevent dead neurons"""
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
+def random_check(dataset,axes):
+    num=int(np.random.uniform(0,len(dataset)))
+    for i in range(3):
+        if i==2:
+            axes[i].imshow(np.reshape(y.eval(feed_dict = {x:dataset[:,:,0]})[num],(16,16)))
+        else:
+            axes[i].imshow(np.reshape(dataset[num,:,i],(16,16)))
+
+
+def visual_check(dataset):
+    fig=plt.figure(facecolor="white")
+    axes=[plt.subplot(3,3,i+1) for i in range(9)]
+    for i in range(3):
+        random_check(dataset,axes[i::3])
+    plt.show()
+
 
 size=16
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -34,8 +50,8 @@ y_=tf.placeholder(tf.float32,[None,size**2])
 #cross entropy function
 cross_entropy=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
 reg=tf.nn.l2_loss(W)
-loss=tf.reduce_mean(cross_entropy+0.001*reg)
-train_step=tf.train.GradientDescentOptimizer(1e1).minimize(cross_entropy)
+loss=tf.reduce_mean(cross_entropy+0.01*reg)
+train_step=tf.train.GradientDescentOptimizer(1e1).minimize(loss)
 
 
 # returns a list of booleans
@@ -44,21 +60,13 @@ correct_prediction=tf.equal(tf.argmax(y,1),tf.argmax(y_,1))
 accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y,y_)))
 tf.global_variables_initializer().run()
-
 for i in range(2000):
-    batch_xs,batch_ys = training.next_batch(1000)
+    batch_xs,batch_ys = training.next_batch(100)
     sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
-    if i%100==0:
+    if i%1000==0:
+        # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
+        print(i,"training accuracy {}".format(rms.eval(feed_dict = {x:batch_xs,y_:batch_ys})))
 
-        print(i,"test accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
-
-fig=plt.figure(facecolor="white")
-ax1=plt.subplot(311)
-ax1.imshow(np.reshape(evaluation.images[0,:,0],(16,16)))
-ax2=plt.subplot(312)
-ax2.imshow(np.reshape(evaluation.images[0,:,1],(16,16)))
-ax3=plt.subplot(313)
-ax3.imshow(np.reshape(y.eval(feed_dict = {x:evaluation.images[:,:,0]})[0],(16,16)))
-plt.show()
+visual_check(evaluation.images)
 plt.imshow(np.reshape(W.eval(),(256,256)))
 plt.show()
