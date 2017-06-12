@@ -15,7 +15,7 @@ def imageto_array(image_path,v=False):
         print(im.size,im.format,im.mode)
         print(arrayim.shape)
     im.close()
-    return arrayim/255
+    return arrayim/np.amax(arrayim)
 def imageto_tensor(array):
     return tf.convert_to_tensor(array)
 

@@ -34,7 +34,16 @@ def visual_check(dataset):
     axes=[plt.subplot(3,3,i+1) for i in range(9)]
     for i in range(3):
         random_check(dataset,axes[i::3])
-    plt.show()
+    # plt.show()
+def visualize_conv(W,n):
+    fig=plt.figure(facecolor="white")
+    axes=[plt.subplot(n//4+1,4,i+1) for i in range(n)]
+    for i in range(n):
+        axes[i].imshow(np.reshape(W.eval()[:,:,:,i],(5,5)))
+    # plt.show()
+    print(W.eval().shape)
+
+
 
 
 size=16
@@ -52,7 +61,7 @@ y_=tf.placeholder(tf.float32,[None,size**2])
 
 # encodes a feature window of 5x5 from one
 # input channel (image) to 32 output channels (32 features)
-nfeatures=16
+nfeatures=32
 W_conv1 = weight_variable([5, 5, 1, nfeatures])
 # one shared bias for each features
 b_conv1 = bias_variable([nfeatures])
@@ -72,11 +81,7 @@ h_pool1_flat = tf.reshape(h_pool1, [-1, int(size/2*size/2*nfeatures)])
 #vectors times weights +biases applying relu function
 h_fc1 = tf.nn.relu(tf.matmul(h_pool1_flat, W_fc1) + b_fc1)
 
-### Dropout layer ###
 
-#reduces oversampling, but has the most effect on large networks
-keep_prob = tf.placeholder(tf.float32)
-h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 ### Readout layer ###
 W_fc2 = weight_variable([size**2, size**2])
@@ -85,7 +90,7 @@ y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
 
 #cross entropy function
 cross_entropy=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
-train_step=tf.train.GradientDescentOptimizer(1e1).minimize(cross_entropy)
+train_step=tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
 
 
 # returns a list of booleans
@@ -94,13 +99,33 @@ correct_prediction=tf.equal(tf.argmax(y_conv,1),tf.argmax(y_,1))
 accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y_conv,y_)))
 tf.global_variables_initializer().run()
-for i in range(20):
+
+
+# realtime visualization code
+fig=plt.figure(figsize=(10,6),facecolor="white")
+ax1=plt.subplot(111)
+plt.ion()
+data=[]
+iteration=[]
+
+for i in range(2000):
     batch_xs,batch_ys = training.next_batch(100)
     sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
-    if i%10==0:
+    if i%100==0 and i!=0:
         # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
-        print(i,"training accuracy {}".format(rms.eval(feed_dict = {x:batch_xs,y_:batch_ys})))
+        acc=cross_entropy.eval(feed_dict = {x:batch_xs,y_:batch_ys})
+        print(i,"training accuracy {}".format(acc))
 
+        #realtime visualization code
+        ax1.clear()
+        data.append(acc)
+        iteration.append(i)
+        ax1.plot(iteration, data)
+        plt.pause(0.05)
+
+plt.ioff()
 visual_check(evaluation.images)
-# plt.imshow(np.reshape(W.eval(),(256,256)))
+visualize_conv(W_conv1,32)
+# plt.show()
+# plt.imshow(np.reshape(W_fc2.eval(),(256,256)))
 # plt.show()
