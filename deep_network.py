@@ -36,6 +36,19 @@ def visual_check(dataset):
         random_check(dataset,axes[i::3])
     plt.show()
 
+def visualize_conv(W_conv1,num):
+    fig=plt.figure(facecolor="white")
+    size=int(np.sqrt(num))+1
+    axes=[plt.subplot(size,size,i+1) for i in range(num)]
+    print(W_conv1[:,:,0,0].shape)
+    for i in range(num):
+        axes[i].imshow(W_conv1[:,:,0,i])
+        axes[i].get_xaxis().set_visible(False)
+        axes[i].get_yaxis().set_visible(False)
+    plt.show()
+
+
+
 
 size=16
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -101,6 +114,7 @@ for i in range(20):
         # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
         print(i,"training accuracy {}".format(rms.eval(feed_dict = {x:batch_xs,y_:batch_ys})))
 
-visual_check(evaluation.images)
+# visual_check(evaluation.images)
+visualize_conv(W_conv1.eval(),16)
 # plt.imshow(np.reshape(W.eval(),(256,256)))
 # plt.show()
