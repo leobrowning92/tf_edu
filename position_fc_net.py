@@ -79,8 +79,8 @@ for i in range(2000):
         plt.plot(step,acc,'b')
         plt.pause(0.001)
 plt.ioff()
-
-visual_check(evaluation.images)
+plt.show()
+# visual_check(evaluation.images)
 plt.imshow(W_fc1.eval())
 plt.show()
 plt.imshow(W_fc2.eval())
