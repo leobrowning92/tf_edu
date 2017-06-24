@@ -98,7 +98,7 @@ y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
 
 #cross entropy function
 cross_entropy=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
-train_step=tf.train.GradientDescentOptimizer(1e1).minimize(cross_entropy)
+train_step=tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
 
 
 # returns a list of booleans
@@ -107,14 +107,14 @@ correct_prediction=tf.equal(tf.argmax(y_conv,1),tf.argmax(y_,1))
 accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y_conv,y_)))
 tf.global_variables_initializer().run()
-for i in range(20):
+for i in range(200):
     batch_xs,batch_ys = training.next_batch(100)
     sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
     if i%10==0:
         # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
         print(i,"training accuracy {}".format(rms.eval(feed_dict = {x:batch_xs,y_:batch_ys})))
 
-# visual_check(evaluation.images)
+visual_check(evaluation.images)
 visualize_conv(W_conv1.eval(),16)
-# plt.imshow(np.reshape(W.eval(),(256,256)))
-# plt.show()
+plt.imshow(W_fc2.eval())
+plt.show()
