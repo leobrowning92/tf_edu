@@ -61,7 +61,7 @@ def make_test_image(fname,savedir,size,overshoot,assert_intersect=False):
     line(ctx,s1[0],s1[1])
     line(ctx,s2[0],s2[1])
     if p1==False:
-        p1=['NaN','NaN']
+        p1=[False,False]
     else:
         ctx.set_source_rgb(0,1,0)
         ctx.rectangle(p1[0],p1[1],1,1)
@@ -69,25 +69,17 @@ def make_test_image(fname,savedir,size,overshoot,assert_intersect=False):
     sur.write_to_png(os.path.join(savedir,fname))
     return p1
 
-def make_image_set(number,savedir,size,assert_intersect):
+def make_image_set(number,savedir,size):
     checkdir(savedir)
     info=np.empty((number,2))
     for i in range(number):
-        info[i]=make_test_image("{0:06d}.png".format(i) , savedir, size,size*0.6,assert_intersect=assert_intersect)
+        info[i]=make_test_image("{0:06d}.png".format(i) , savedir, size,size*0.6,assert_intersect=True)
     np.savetxt(os.path.join(savedir,"info.txt"), info,delimiter=',')
-def make_line_data():
-    checkdir("line_data")
-    make_image_set(1000,"line_data/evaluation/",16,True)
-    make_image_set(10000,"line_data/training/",16,True)
-def make_yn_data():
-    checkdir("yn_data")
-    make_image_set(1000,"yn_data/evaluation/",16,False)
-    make_image_set(10000,"yn_data/training/",16,False)
 
 if __name__=="__main__":
-    make_yn_data()
-    make_line_data()
-
+    checkdir("line_data")
+    make_image_set(1000,"line_data/evaluation/",16)
+    make_image_set(10000,"line_data/training/",16)
 
 
 
