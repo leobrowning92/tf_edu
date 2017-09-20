@@ -108,10 +108,10 @@ plt.ion()
 data=[]
 iteration=[]
 
-for i in range(2000):
+for i in range(200000):
     batch_xs,batch_ys = training.next_batch(100)
     sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
-    if i%100==0 and i!=0:
+    if i%1000==0 and i!=0:
         # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
         acc=cross_entropy.eval(feed_dict = {x:batch_xs,y_:batch_ys})
         print(i,"training accuracy {}".format(acc))
@@ -128,4 +128,4 @@ visual_check(evaluation.images)
 visualize_conv(W_conv1,32)
 # plt.show()
 # plt.imshow(np.reshape(W_fc2.eval(),(256,256)))
-# plt.show()
+plt.show()
