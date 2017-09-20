@@ -32,41 +32,61 @@ def visual_check(dataset):
         random_check(dataset,axes[i::3])
     plt.show()
 
-
 size=16
-tf.logging.set_verbosity(tf.logging.INFO)
 sess=tf.InteractiveSession()
-training=load_image.Dataset("line_data/training/",size)
-evaluation=load_image.Dataset("line_data/evaluation/",size)
+training=load_image.Dataset("yn_data/training/",size)
+evaluation=load_image.Dataset("yn_data/evaluation/",size)
+
 x= tf.placeholder(tf.float32, [None,size**2]) #note None allows any length
-W= weight_variable([size**2,size**2])
-b=bias_variable([size**2])
+W_fc1= weight_variable([size**2,size**2])
+b_fc1=bias_variable([size**2])
+y1=tf.matmul(x,W_fc1)+b_fc1
+
+W_fc2= weight_variable([size**2,2])
+b_fc2=bias_variable([2])
 
 #implement model
-y=tf.nn.softmax(tf.matmul(x,W)+b)#this implements our Model
+y=tf.matmul(y1,W_fc2)+b_fc2#this implements our Model
+
 #placeholder for correct values
-y_=tf.placeholder(tf.float32,[None,size**2])
+y_=tf.placeholder(tf.float32,[None,2])
 
 #cross entropy function
 cross_entropy=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-reg=tf.nn.l2_loss(W)
-loss=tf.reduce_mean(cross_entropy+0.01*reg)
-train_step=tf.train.GradientDescentOptimizer(1e1).minimize(loss)
+reg=tf.nn.l2_loss(W_fc2)+tf.nn.l2_loss(W_fc1)
+loss=tf.reduce_mean(cross_entropy+0.001*reg)
+train_step=tf.train.GradientDescentOptimizer(1e-3).minimize(loss)
 
 
 # returns a list of booleans
-correct_prediction=tf.equal(tf.argmax(y,1),tf.argmax(y_,1))
+correct_prediction=tf.equal(tf.argmax(y,axis=1),tf.argmax(y_,axis=1))
 #returns the average of the booleans cast to floats. ie 1=True,0=False
 accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
-rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y,y_)))
-tf.global_variables_initializer().run()
-for i in range(2000):
-    batch_xs,batch_ys = training.next_batch(100)
-    sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
-    if i%1000==0:
-        # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
-        print(i,"training accuracy {}".format(rms.eval(feed_dict = {x:batch_xs,y_:batch_ys})))
 
-visual_check(evaluation.images)
-plt.imshow(np.reshape(W.eval(),(256,256)))
+tf.global_variables_initializer().run()
+print(evaluation.yn[:10])
+plt.ion()
+step=[]
+eval_acc=[]
+train_acc=[]
+for i in range(10000):
+    batch_xs,batch_ys = training.next_yesno_batch(10)
+    sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
+    if i%100==0:
+        # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
+        eval_test=accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.yn})
+        train_test=accuracy.eval(feed_dict = {x:batch_xs,y_:batch_ys})
+        print(i,"training accuracy {}".format(test))
+        step.append(i)
+        eval_acc.append(test)
+        plt.plot(step,eval_acc,'b')
+        plt.plot(step,train_acc,'r')
+        plt.pause(0.001)
+plt.ioff()
 plt.show()
+# visual_check(evaluation.images)
+plt.imshow(W_fc1.eval())
+plt.show()
+
+# plt.imshow(W_fc2.eval())
+# plt.show()

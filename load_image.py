@@ -26,7 +26,8 @@ class Dataset(object):
         self.fnames.sort()
         self.savedir=savedir
         self.info=np.genfromtxt(os.path.join(self.savedir,"info.txt"), delimiter=',')
-        self.truths=np.not_equal(self.info,0)
+        self.truths=[ not(np.isnan(x[0])) for x in self.info]
+        self.yn=[[float(not(x)),float(x)] for x in self.truths]
         self.images=self.load_images()
         self.size=size
         self.images=np.reshape(self.images,(self.number,size**2,4))
@@ -53,12 +54,24 @@ class Dataset(object):
         if stop<self.number:
             self._epochs_completed+=1
             return self.images[start:stop,:,0],self.images[start:stop,:,1]
+    def next_yesno_batch(self,batch_size):
+        start=self._epochs_completed*batch_size
+        stop=(self._epochs_completed+1)*batch_size
+        if stop>=self.number:
+            self._shuffled_images=self.images
+            np.random.shuffle(self._shuffled_images)
+            self._epochs_completed=1
+            return self.images[start:stop,:,0],self.yn[start:stop]
+        if stop<self.number:
+            self._epochs_completed+=1
+            return self.images[start:stop,:,0],self.yn[start:stop]
 
 
 
 
 if __name__=="__main__":
     assert len(sys.argv)==2, "image-gen takes exactly 1 arguments, {} given.".format(len(sys.argv)-1)
-    d=Dataset(sys.argv[1])
+    d=Dataset(sys.argv[1],16)
     print(d.images.shape)
-    print(d.truths[:10,:])
+    print(d.truths[:20])
+    print(d.yn[:20])

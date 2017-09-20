@@ -45,6 +45,19 @@ def visualize_conv(W,n):
 
 
 
+def visualize_conv(W_conv1,num):
+    fig=plt.figure(facecolor="white")
+    size=int(np.sqrt(num))+1
+    axes=[plt.subplot(size,size,i+1) for i in range(num)]
+    print(W_conv1[:,:,0,0].shape)
+    for i in range(num):
+        axes[i].imshow(W_conv1[:,:,0,i])
+        axes[i].get_xaxis().set_visible(False)
+        axes[i].get_yaxis().set_visible(False)
+    plt.show()
+
+
+
 
 size=16
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -90,7 +103,9 @@ y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
 
 #cross entropy function
 cross_entropy=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
-train_step=tf.train.GradientDescentOptimizer(1e-4).minimize(cross_entropy)
+regularizers=0.1*tf.nn.l2_loss(W_fc1)+0.1*tf.nn.l2_loss(W_fc2)+0.1*tf.nn.l2_loss(W_conv1)
+reg_loss=cross_entropy+regularizers
+train_step=tf.train.GradientDescentOptimizer(1e-2).minimize(reg_loss)
 
 
 # returns a list of booleans
@@ -100,32 +115,26 @@ accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 rms=tf.sqrt(tf.reduce_mean(tf.squared_difference(y_conv,y_)))
 tf.global_variables_initializer().run()
 
-
-# realtime visualization code
-fig=plt.figure(figsize=(10,6),facecolor="white")
-ax1=plt.subplot(111)
 plt.ion()
-data=[]
-iteration=[]
-
-for i in range(200000):
+step=[]
+acc=[]
+for i in range(1000):
     batch_xs,batch_ys = training.next_batch(100)
-    sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys})
-    if i%1000==0 and i!=0:
+    sess.run(train_step,feed_dict={x:batch_xs,y_:batch_ys,keep_prob:0.5})
+    if i%100==0:
         # print(i,"evaluation accuracy {}".format(accuracy.eval(feed_dict = {x:evaluation.images[:,:,0],y_:evaluation.images[:,:,1]})))
-        acc=cross_entropy.eval(feed_dict = {x:batch_xs,y_:batch_ys})
-        print(i,"training accuracy {}".format(acc))
-
-        #realtime visualization code
-        ax1.clear()
-        data.append(acc)
-        iteration.append(i)
-        ax1.plot(iteration, data)
-        plt.pause(0.05)
+        test=rms.eval(feed_dict = {x:batch_xs,y_:batch_ys,keep_prob:1.0})
+        print(i,"training accuracy {}".format(test))
+        step.append(i)
+        acc.append(test)
+        plt.plot(step,acc,'b')
+        plt.pause(0.001)
+plt.ioff()
 
 plt.ioff()
 visual_check(evaluation.images)
-visualize_conv(W_conv1,32)
-# plt.show()
-# plt.imshow(np.reshape(W_fc2.eval(),(256,256)))
+visualize_conv(W_conv1.eval(),nfeatures)
+plt.imshow(W_fc1.eval())
+plt.show()
+plt.imshow(W_fc2.eval())
 plt.show()
